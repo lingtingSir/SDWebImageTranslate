@@ -27,10 +27,27 @@ typedef NS_ENUM(NSInteger, SDImageCacheType) {
     SDImageCacheTypeMemory
 };
 
+ /**
+ *  完成查询返回block回调
+ *
+ *  @param image     目标图片
+ *  @param cacheType 查询类型，使用的磁盘缓存还是内存缓存查询（到哪里查询）
+ */
 typedef void(^SDWebImageQueryCompletedBlock)(UIImage *image, SDImageCacheType cacheType);
 
+/**
+ * 检查缓存是否完成
+ *
+ *  @param isInCache 返回Yes 完成 ，  NO
+ */
 typedef void(^SDWebImageCheckCacheCompletionBlock)(BOOL isInCache);
 
+/**
+ *  计算文件的大小
+ *
+ *  @param fileCount 文件块数
+ *  @param totalSize 文件总大小
+ */
 typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger totalSize);
 
 /**

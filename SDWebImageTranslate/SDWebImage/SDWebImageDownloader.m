@@ -16,6 +16,10 @@ NSString *const SDWebImageDownloadStartNotification = @"SDWebImageDownloadStartN
 /// 停止下载
 NSString *const SDWebImageDownloadStopNotification = @"SDWebImageDownloadStopNotification";
 
+/**
+ *  / const *    *const 区别
+ *    const * 解释： kProressCallbackKey为常量，不可以改变值，可以改变指向例如kProressCallbackKey = @"proerasdas";这是错误的，   *kProressCallbackKey = &i;这是正确的
+ */
 static NSString *const kProgressCallbackKey = @"progress";
 static NSString *const kCompletedCallbackKey = @"completed";
 
@@ -32,7 +36,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
 // HTTP请求头
 @property (strong, nonatomic) NSMutableDictionary *HTTPHeaders;
 // This queue is used to serialize the handling of the network responses of all the download operation in a single queue
-// barrierQueue是一个串行队列，在一个单一队列中顺序处理所有下载操作的网络响应
+// barrierQueue是一个并行队列，在一个单一队列中顺序处理所有下载操作的网络响应
 @property (SDDispatchQueueSetterSementics, nonatomic) dispatch_queue_t barrierQueue;
 
 @end
@@ -129,11 +133,11 @@ static NSString *const kCompletedCallbackKey = @"completed";
 }
 
 - (id <SDWebImageOperation>)downloadImageWithURL:(NSURL *)url options:(SDWebImageDownloaderOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageDownloaderCompletedBlock)completedBlock {
-    // 下载对象
+    // 下载对象  block中要修改的变量需要__block修饰
     __block SDWebImageDownloaderOperation *operation;
-    // weak self
-    __weak SDWebImageDownloader *wself = self;
-    // 添加设置回调
+    // weak self  防止retain cycle
+    __weak SDWebImageDownloader *wself = self;  // 下面几张代码中 有使用SDWebImageDownloader对象赋值给SDWebImageDownloader 对象，设置弱引用防止循环引用，
+    // 添加设置回调  调用另一方法,在创建回调的block中创建新的操作，配置之后将其放入downloadQueue操作队列中。
     [self addProgressCallback:progressBlock andCompletedBlock:completedBlock forURL:url createCallback:^{
         // 设置延时时长 为 15.0秒
         NSTimeInterval timeoutInterval = wself.downloadTimeout;
@@ -142,7 +146,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
         }
 
         // In order to prevent from potential duplicate caching (NSURLCache + SDImageCache) we disable the cache for image requests if told otherwise
-        // 为防止重复缓存(NSURLCache + SDImageCache)，如果设置了 SDWebImageDownloaderUseNSURLCache，则禁用 SDImageCache 
+        // 为防止重复缓存(NSURLCache + SDImageCache)，如果设置了 SDWebImageDownloaderUseNSURLCache（系统自带的使用 NSURLCache 和默认缓存策略），则禁用 SDImageCache
         NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url cachePolicy:(options & SDWebImageDownloaderUseNSURLCache ? NSURLRequestUseProtocolCachePolicy : NSURLRequestReloadIgnoringLocalCacheData) timeoutInterval:timeoutInterval];
         // 是否处理cookies
         request.HTTPShouldHandleCookies = (options & SDWebImageDownloaderHandleCookies);
@@ -250,6 +254,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
         
         // 如果是第一次下载 则回调
         if (first) {
+            // 通过这个回调，可以实时获取下载进度以及是下载完成情况
             createCallback();
         }
     });
@@ -257,7 +262,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
 
 - (NSArray *)callbacksForURL:(NSURL *)url {
     __block NSArray *callbacksForURL;
-    // 异步执行队列任务
+    // dispatch_sync 也是将block发送到指定的线程去执行，但是当前的线程会阻塞，等待block在指定线程执行完成后才会继续向下执行。 dispatch_async 是将block发送到指定线程去执行，当前线程不会等待，会继续向下执行。 self.barrierQueue队列类型为并行队列,设置一个线程同步，使用并行队列的执行方式获取回调URL
     dispatch_sync(self.barrierQueue, ^{
         callbacksForURL = self.URLCallbacks[url];
     });

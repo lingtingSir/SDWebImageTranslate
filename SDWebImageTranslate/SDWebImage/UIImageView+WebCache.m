@@ -51,7 +51,7 @@ static char imageURLKey;
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletionBlock)completedBlock {
     // 取消当前图像下载
     [self sd_cancelCurrentImageLoad];
-    // 利用运行时retain 设置 url
+    // 利用运行时retain(强引用) 设置 url，为什么要设置关联呢？如果在第二次取出，则通过获取相关联的对象objc_setAssociatedObject方法来获取对应的（URL）
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     // 如果不需要延时设置占位符图片 则先显示占位符图片
     if (!(options & SDWebImageDelayPlaceholder)) {
@@ -118,7 +118,9 @@ static char imageURLKey;
     __weak UIImageView *wself = self;
 
     NSMutableArray *operationsArray = [[NSMutableArray alloc] init];
-
+    
+    // 指定的强引用相关
+    
     for (NSURL *logoImageURL in arrayOfURLs) {
         id <SDWebImageOperation> operation = [SDWebImageManager.sharedManager downloadImageWithURL:logoImageURL options:0 progress:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
             if (!wself) return;

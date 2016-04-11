@@ -114,6 +114,62 @@
 
 /*
  1. id foo1;
+ （什么是 id？
+ id 在 objc.h 中定义如下:
+ 
+ /// A pointer to an instance of a class. （id 是指向一个 objc_object 结构体的指针。）
+ typedef struct objc_object *id;
+ id 这个struct的定义本身就带了一个 *, 所以我们在使用其他NSObject类型的实例时需要在前面加上 *， 而使用 id 时却不用。
+ objc_object 在 objc.h 中定义如下:
+ 
+ /// Represents an instance of a class.
+ struct objc_object {
+ Class isa;
+ }; 
+ 
+ 这个时候我们知道Objective-C中的object在最后会被转换成C的结构体，而在这个struct中有一个 isa 指针，指向它的类别 Class。
+ 
+ 那么什么是Class呢
+ 
+ 在 objc.h 中定义如下:
+ 
+ /// An opaque type that represents an Objective-C class.
+ typedef struct objc_class *Class; （Class本身指向的也是一个C的struct objc_class。）
+ 
+ 那么什么是Class呢
+ objc_class定义如下:
+ 
+ struct objc_class {
+ Class isa  OBJC_ISA_AVAILABILITY;
+ #if !__OBJC2__
+ Class super_class                                        OBJC2_UNAVAILABLE;
+ const char *name                                         OBJC2_UNAVAILABLE;
+ long version                                             OBJC2_UNAVAILABLE;
+ long info                                                OBJC2_UNAVAILABLE;
+ long instance_size                                       OBJC2_UNAVAILABLE;
+ struct objc_ivar_list *ivars                             OBJC2_UNAVAILABLE;
+ struct objc_method_list **methodLists                    OBJC2_UNAVAILABLE;
+ struct objc_cache *cache                                 OBJC2_UNAVAILABLE;
+ struct objc_protocol_list *protocols                     OBJC2_UNAVAILABLE;
+ #endif
+ } OBJC2_UNAVAILABLE;
+ 该结构体中，isa 指向所属Class， super_class指向父类别。
+ 我们看到在Objective-C的设计哲学中，一切都是对象。Class在设计中本身也是一个对象。而这个Class对象的对应的类，我们叫它 Meta Class。即Class结构体中的 isa 指向的就是它的 Meta Class。
+ 
+ 根据上面的描述，我们可以把Meta Class理解为 一个Class对象的Class。简单的说：
+ 
+ 当我们发送一个消息给一个NSObject对象时，这条消息会在对象的类的方法列表里查找
+ 当我们发送一个消息给一个类时，这条消息会在类的Meta Class的方法列表里查找
+ 而 Meta Class本身也是一个Class，它跟其他Class一样也有自己的 isa 和 super_class 指针。看
+ 
+ 每个Class都有一个isa指针指向一个唯一的Meta Class
+ 每一个Meta Class的isa指针都指向最上层的Meta Class（图中的NSObject的Meta Class）
+ 最上层的Meta Class的isa指针指向自己，形成一个回路
+ 每一个Meta Class的super class指针指向它原本Class的 Super Class的Meta Class。但是最上层的Meta Class的 Super Class指向NSObject Class本身
+ 最上层的NSObject Class的super class指向 nil
+
+ ）
+ 
  2. NSObject *foo2;
  3. id<NSObject> foo3;
  第一种是最常用，它简单地申明了指向对象的指针，没有给编译器任何类型信息，因此，编译器不会做类型检查。但也因为是这样，你可以发送任何信息给id类型的对象。这就是为什么+alloc返回id类型，但调用[[Foo alloc] init]不会产生编译错误。
@@ -163,7 +219,7 @@
         });
         return operation;
     }
-    // 将该操作线程添加到数值里面
+    // 将该操作线程添加到数组里面
     @synchronized (self.runningOperations) {
         [self.runningOperations addObject:operation];
     }

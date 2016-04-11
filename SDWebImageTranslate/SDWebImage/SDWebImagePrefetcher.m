@@ -96,7 +96,7 @@
                                 totalCount:self.prefetchURLs.count
             ];
         }
-        // 如果预存完成个数大于请求的个数，则请求最后一个预存图片
+        // 如果预存完成个数大于请求的个数，则请求requestedCount最后一个预存图片
         if (self.prefetchURLs.count > self.requestedCount) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self startPrefetchingAtIndex:self.requestedCount];
@@ -120,6 +120,8 @@
     NSUInteger total = [self.prefetchURLs count];
     // delegate回调
     NSLog(@"Finished prefetching (%@ successful, %@ skipped, timeElasped %.2f)", @(total - self.skippedCount), @(self.skippedCount), CFAbsoluteTimeGetCurrent() - self.startedTime);
+    
+    // 调用预取图片完成代理
     if ([self.delegate respondsToSelector:@selector(imagePrefetcher:didFinishWithTotalCount:skippedCount:)]) {
         [self.delegate imagePrefetcher:self
                didFinishWithTotalCount:(total - self.skippedCount)

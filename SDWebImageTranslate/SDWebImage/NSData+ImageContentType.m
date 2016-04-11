@@ -10,7 +10,7 @@
 // 如何判断文件类型,通过第一个字节判断:  http://www.mobile-open.com/2016/101128.html
 
 /**
- 就是根据图片的二级制是数据返回其对应的MIME类型
+ 就是根据图片的二进制是数据返回其对应的MIME类型
  */
 + (NSString *)sd_contentTypeForImageData:(NSData *)data {
     uint8_t c;

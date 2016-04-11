@@ -10,7 +10,9 @@
  /**
  
  * 为什么从磁盘里面取出图片后，block回调之前要解压图片呢？
- * 因为图片在ImageView上面显示的时候需要解压，而这个解压操作是在主线程里面进行的，比较耗时，这样就会产生延时效果，而用decodedImageWithImage:在后台解压能够解决这一问题，但是这种用空间换时间的方法也存在着内存暴增甚至崩溃等问题，所以自己得权衡一下。这就是为什么SDImageCache、SDWebImageDownloader、SDWebImageDownloaderOperation类中都有shouldDecompressImages (是否解压图片)值存在的原因。
+ * 因为图片在ImageView上面显示的时候需要解压，而这个解压操作是在主线程里面进行的，比较耗时，这样就会产生延时效果，而用decodedImageWithImage:在后台解压能够解决这一问题，但是这种用空间换时间的方法也存在着内存暴增甚至崩溃等问题，所以自己得权衡一下。这就是为什么SDImageCache、SDWebImageDownloader、SDWebImageDownloaderOperation类中都有shouldDecompressImages (是否解压图片)值存在的原因。 shouldDecomp
+ 
+ 
  */
 //
 #import "SDWebImageDecoder.h"

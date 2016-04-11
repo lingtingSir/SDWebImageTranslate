@@ -82,6 +82,7 @@
     return self;
 }
 
+// 重写NSOperation Start方法
 - (void)start {
     @synchronized (self) {
         // 如果被取消了
@@ -135,6 +136,14 @@
             // Note: we use a timeout to work around an issue with NSURLConnection cancel under iOS 5
             //       not waking up the runloop, leading to dead threads (see https://github.com/rs/SDWebImage/issues/466)
             
+            /**
+             *  Default	NSDefaultRunLoopMode(Cocoa) kCFRunLoopDefaultMode (Core Foundation)	最常用的默认模式
+             
+             空闲RunLoopMode
+             当用户正在滑动 UIScrollView 时，RunLoop 将切换到 UITrackingRunLoopMode 接受滑动手势和处理滑动事件（包括减速和弹簧效果），此时，其他 Mode （除 NSRunLoopCommonModes 这个组合 Mode）下的事件将全部暂停执行，来保证滑动事件的优先处理，这也是 iOS 滑动顺畅的重要原因。
+             当 UI 没在滑动时，默认的 Mode 是 NSDefaultRunLoopMode（同 CF 中的 kCFRunLoopDefaultMode），同时也是 CF 中定义的 “空闲状态 Mode”。当用户啥也不点，此时也没有什么网络 IO 时，就是在这个 Mode 下。
+             
+             */
             CFRunLoopRunInMode(kCFRunLoopDefaultMode, 10, false);
         }
         else {
@@ -281,9 +290,9 @@
 
 /**
  *  接收到数据
- *
+ *<#data description#>
  *  @param connection <#connection description#>
- *  @param data       <#data description#>
+ *  @param data       
  */
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     // 追加数据
